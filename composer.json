@@ -1,0 +1,37 @@
+{
+    "name": "linkorb/portfolio",
+    "description": "Portfolio: multi-project management tooling",
+    "homepage": "http://www.github.com/linkorb/portfolio",
+    "keywords": ["php", "pmo", "p3o", "portfolio management", "program management", "project management", "gantt", "pmi", "wbs", "linkorb"],
+    "type": "library",
+    "authors": [
+        {
+            "name": "LinkORB Engineering",
+            "email": "engineering@linkorb.com",
+            "role": "Development"
+        }
+    ],
+    "require": {
+        "php": "^7.0",
+        "linkorb/boost": "^1.0",
+        "linkorb/collection": "^1.0",
+        "symfony/dotenv": "^4.0",
+        "symfony/yaml": "^4.0",
+        "doctrine/inflector": "^1.0",
+        "simshaun/recurr": "^4.0"
+    },
+    "require-dev": {
+        "twig/twig": "^1.0",
+        "symfony/console": "^4.0",
+        "linkorb/autotune": "~1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Portfolio\\": "src/"
+        }
+    },
+    "bin": [
+        "bin/portfolio"
+    ],
+    "license": "MIT"
+}
