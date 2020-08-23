@@ -46,7 +46,7 @@ abstract class AbstractActivityAdapter
     {
         $levels = [];
         foreach ($rows as &$row) {
-            $effort = strtolower($row['effort']) ?? null;
+            $effort = strtolower($row['effort'] ?? null) ?? null;
             $row['children'] = [];
 
             if (substr($effort, -1, 1)=='h') {
@@ -57,6 +57,12 @@ abstract class AbstractActivityAdapter
             if (substr($effort, -1, 1)=='d') {
                 $effort = (int)substr($effort, 0, -1);
                 $effort = $effort * 8;
+                $row['effort'] = $effort;
+            }
+
+            if (substr($effort, -1, 1)=='m') {
+                $effort = (int)substr($effort, 0, -1);
+                $effort = round($effort / 60, 1);
                 $row['effort'] = $effort;
             }
 
@@ -74,7 +80,12 @@ abstract class AbstractActivityAdapter
                 $row['predecessorIds'] = explode(',', $row['predecessors']);
             }
             if (isset($row['resources'])) {
-                $row['resourceIds'] = explode(',', $row['resources']);
+                $resourceIds = $row['resources'] ?? null;
+                if (is_string($resourceIds)) {
+                    // support comma-seperated string as an array
+                    $resourceIds = explode(',', $resourceIds);
+                }
+                $row['resourceIds'] = $resourceIds;
             }
 
             if (!isset($row['parentId'])) {

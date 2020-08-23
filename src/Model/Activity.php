@@ -15,12 +15,13 @@ class Activity extends BaseModel
     protected $childIndex;
     protected $wbsId;
     protected $project;
-    protected $priority = 3;
+    protected $priority = null;
     protected $priorityKey;
     protected $parentId;
     protected $parent;
     protected $type;
     protected $status;
+    protected $state;
     protected $children;
     protected $resourceIds = [];
     protected $resources;
@@ -75,7 +76,7 @@ class Activity extends BaseModel
         return $effort;
     }
 
-    
+
 
     public function resolveCompletedEffort()
     {
@@ -111,6 +112,8 @@ class Activity extends BaseModel
         $obj->effort = $config['effort'] ?? null;
         $obj->level = $config['level'] ?? null;
         $obj->status = $config['status'] ?? null;
+        $obj->state = $config['state'] ?? null;
+        $obj->priority = $config['priority'] ?? null;
         $obj->parentId = $config['parentId'] ?? null;
         if (isset($config['resourceIds'])) {
             $obj->resourceIds = $config['resourceIds'] ?? null;
@@ -134,7 +137,7 @@ class Activity extends BaseModel
         $data['predecessorIds'] = $this->predecessorIds;
         $data['effort'] = $this->effort;
         return $data;
-        
+
     }
 
     public function getPrimaryResource()

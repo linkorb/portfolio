@@ -8,17 +8,17 @@ use RuntimeException;
 
 /**
  * A single project instance
- * 
+ *
  * It is primarily a container for an array of 0 or more `Activity` instances
- * 
+ *
  * Example usage:
- * 
+ *
  * ```php
  * $p = new Project($portfolio);
  * $p->getActivities()->add($activity1);
  * $p->getActivities()->add($activity2);
  * ```
- * 
+ *
  * @access public
  */
 class Project extends BaseModel
@@ -60,7 +60,7 @@ class Project extends BaseModel
 
     /**
      * Return unique identifier
-     * 
+     *
      * Ensures uniqueness in `TypedArray` instances
      */
     public function identifier()
@@ -70,18 +70,18 @@ class Project extends BaseModel
 
     /**
      * Instantiates a new Project from configuration data
-     * 
+     *
      * Factory method to quickly instantiate a new Project based on configuration data
-     * 
+     *
      * Example usage:
      * ```php
      * $project = Project::fromArray($portfolio, 'my-project', $config);
      * ```
-     * 
+     *
      * @param Portfolio $portfolio parent Portfolio instance.
      * @param string $id unique id for this project.
      * @param array $config configuration data.
-     * 
+     *
      * @return Project new project instance.
      */
     public static function fromArray(Portfolio $portfolio, string $id, array $config): Project
@@ -102,16 +102,28 @@ class Project extends BaseModel
 
     public function resolve()
     {
-        $root = new Activity();
-        $root->setTitle($this->getTitle());
-        $root->setId($this->getId());
+        // Test if one and only one root activity exists
+        $rootActivities = 0;
         foreach ($this->activities as $activity) {
-            $activity->setProject($this);
             if (!$activity->getParentId()) {
-                $activity->setParentId($root->getId());
+                $rootActivities++;
             }
         }
-        $this->activities->add($root);
+        // Not exactly 1: introducing a generated root activity for this project
+        if ($rootActivities!=1) {
+            $root = new Activity();
+            $root->setTitle($this->getTitle());
+            $root->setId($this->getId());
+
+            foreach ($this->activities as $activity) {
+                $activity->setProject($this);
+                if (!$activity->getParentId()) {
+                    $activity->setParentId($root->getId());
+                }
+            }
+            $this->activities->add($root);
+        }
+
         // Link parents and children (bi-directional)
         foreach ($this->activities as $activity) {
             $parentId = $activity->getParentId();
@@ -147,11 +159,12 @@ class Project extends BaseModel
                 // print_r($id);
                 if ($id) {
                     if (!$this->getPortfolio()->getResources()->hasKey($id)) {
-                        throw new RuntimeException("Activity references unknown resource: #" . $activity->getId() . '/' . $id);
+                        // throw new RuntimeException("Activity references unknown resource: #" . $activity->getId() . '/' . $id);
+                    } else {
+                        $resource = $this->getPortfolio()->getResources()->get($id);
+                        $activity->getResources()->add($resource);
+                        $resource->getActivities()->add($activity);
                     }
-                    $resource = $this->getPortfolio()->getResources()->get($id);
-                    $activity->getResources()->add($resource);
-                    $resource->getActivities()->add($activity);
                 }
             }
         }
@@ -184,7 +197,7 @@ class Project extends BaseModel
         foreach ($this->activities as $activity) {
             $activity->setWbsId($activity->resolveWbsId());
         }
-        
+
         // Resolve project-specific index by wbsId sorting
         // needs a temp array, because collections are not accepted as usort input?
         $res = [];

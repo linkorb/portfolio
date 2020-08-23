@@ -11,7 +11,7 @@ class Portfolio extends BaseModel
 {
     protected $title;
     protected $description;
-    protected $filename;
+    protected $path;
     protected $config;
     protected $projects;
     protected $resources;
@@ -31,25 +31,32 @@ class Portfolio extends BaseModel
     public static function fromEnv(): self
     {
         $portfolioPath = getenv('PORTFOLIO_PATH');
-        $obj = Portfolio::fromFile($portfolioPath . '/portfolio.yaml');
+        $obj = Portfolio::fromPath($portfolioPath);
         return $obj;
     }
-    
-    public static function fromFile(string $filename): self
+
+    public static function fromPath(string $path): self
     {
-        if (!file_exists($filename)) {
-            throw new RuntimeException("File not found: " . $filename);
+        if (!file_exists($path)) {
+            throw new RuntimeException("Portfolio path not found: " . $path);
         }
 
-        $yaml = file_get_contents($filename);
 
-        $config = Yaml::parse($yaml);
+        // Support loading from any yaml file in the portfolio base path
+        // This way part of those files can be generated, while others are manually authored
+        $config = [];
+        foreach (glob($path . '/*.yaml') as $filename) {
+            $yaml = file_get_contents($filename);
+            $newConfig = Yaml::parse($yaml);
+            $config = array_merge_recursive($config, $newConfig);
+        }
+
 
         $obj = new self();
         $obj->id = $config['id'] ?? null;
         $obj->title = $config['title'] ?? null;
         $obj->description = $config['description'] ?? null;
-        $obj->filename = $filename;
+        $obj->path = $path;
 
         foreach ($config['resources'] as $resourceId => $resourceConfig) {
             $resource = Resource::fromArray($resourceId, $resourceConfig);
@@ -105,7 +112,7 @@ class Portfolio extends BaseModel
 
     public function getPath()
     {
-        return dirname($this->filename);
+        return $this->path;
     }
 
     public function resolve()
@@ -122,7 +129,7 @@ class Portfolio extends BaseModel
     {
         $adapter = new DirectoryActivityAdapter();
         foreach ($this->projects as $project) {
-            $path = $this->getPath() . '/projects/' . $project->getId() . '/activities';
+            $path = $this->getPath() . '/projects/' . $project->getId();
             $config = [
                 'path' => $path,
             ];
