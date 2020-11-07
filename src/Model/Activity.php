@@ -95,13 +95,72 @@ class Activity extends BaseModel
     public function resolveCompletedEffortPercentage()
     {
         $completed = $this->resolveCompletedEffort();
-        $effort = $this->getEffort();
+        $total = $this->getEffort();
         $perc = 100;
-        if ($effort>0) {
-            $perc = round(100/$effort*$completed);
+        if ($total>0) {
+            $perc = round(100/$total*$completed);
         }
         return $perc;
     }
+
+    public function resolveCompletedChildren()
+    {
+        $completed = 0;
+        if ($this->getType()=='task') {
+            if ($this->getStatus()=='CLOSED') {
+                $completed++;
+            }
+        }
+
+        foreach ($this->getChildren() as $child) {
+            $completed += $child->resolveCompletedChildren();
+        }
+        return $completed;
+    }
+
+    public function resolveTotalChildren()
+    {
+        $total = 0;
+        if ($this->getType()=='task') {
+            $total++;
+        }
+
+
+        foreach ($this->getChildren() as $child) {
+            $total += $child->resolveTotalChildren();
+        }
+        return $total;
+    }
+
+    public function resolveCompletedChildrenPercentage()
+    {
+        $completed = $this->resolveCompletedChildren();
+        $total = $this->resolveTotalChildren();
+        $perc = 100;
+        if ($total>0) {
+            $perc = round(100/$total*$completed);
+        }
+        return $perc;
+    }
+
+
+    public function resolveUnestimatedChildren()
+    {
+        $unestimated = 0;
+        if ($this->getType()=='task') {
+            if ($this->getEffort()==0) {
+                if ($this->getStatus()!='CLOSED') {
+                    $unestimated++;
+                }
+            }
+        }
+
+        foreach ($this->getChildren() as $child) {
+            $unestimated += $child->resolveUnestimatedChildren();
+        }
+        return $unestimated;
+    }
+
     public static function fromArray(array $config)
     {
         $obj = new self();
