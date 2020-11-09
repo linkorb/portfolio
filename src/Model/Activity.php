@@ -77,6 +77,10 @@ class Activity extends BaseModel
     }
 
 
+    public function isOpen(): bool
+    {
+        return ($this->getStatus()!='CLOSED');
+    }
 
     public function resolveCompletedEffort()
     {
