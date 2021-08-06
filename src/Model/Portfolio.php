@@ -58,7 +58,7 @@ class Portfolio extends BaseModel
         $obj->description = $config['description'] ?? null;
         $obj->path = $path;
 
-        foreach ($config['resources'] as $resourceId => $resourceConfig) {
+        foreach (($config['resources'] ?? []) as $resourceId => $resourceConfig) {
             $resource = Resource::fromArray($resourceId, $resourceConfig);
             $obj->resources->add($resource);
         }
@@ -68,6 +68,7 @@ class Portfolio extends BaseModel
             $obj->projects->add($project);
         }
 
+        /*
         foreach ($config['resources'] as $resourceId => $resourceConfig) {
             $resource = $obj->resources->get($resourceId);
             $timeslots = $obj->generateResourceTimeslots($resource, $resourceConfig['timeslots'] ?? []);
@@ -75,6 +76,7 @@ class Portfolio extends BaseModel
                 $resource->getTimeslots()->add($timeslot);
             }
         }
+        */
 
         return $obj;
     }
@@ -127,16 +129,21 @@ class Portfolio extends BaseModel
 
     public function loadActivities()
     {
-        $adapter = new DirectoryActivityAdapter();
         foreach ($this->projects as $project) {
-            $path = $this->getPath() . '/projects/' . $project->getId();
-            $config = [
-                'path' => $path,
-            ];
-            $activities = $adapter->getActivities($project, $config);
-            foreach ($activities as $activity) {
-                $project->getActivities()->add($activity);
-            }
+            $this->loadActivitiesByProject($project);
+        }
+    }
+
+    public function loadActivitiesByProject(Project $project)
+    {
+        $adapter = new DirectoryActivityAdapter();
+        $path = $this->getPath() . '/projects/' . $project->getId();
+        $config = [
+            'path' => $path,
+        ];
+        $activities = $adapter->getActivities($project, $config);
+        foreach ($activities as $activity) {
+            $project->getActivities()->add($activity);
         }
     }
 
