@@ -97,7 +97,7 @@ abstract class AbstractActivityAdapter
                 $row['parentId'] = $parentId;
             }
 
-            $res[$row['id']] = $row;
+            // $res[$row['id']] = $row;
         }
 
         foreach ($rows as &$row) {
