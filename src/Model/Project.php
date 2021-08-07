@@ -128,10 +128,12 @@ class Project extends BaseModel
         foreach ($this->activities as $activity) {
             $parentId = $activity->getParentId();
             if ($parentId) {
-                $parent = $this->activities->get($parentId);
-                $activity->setParent($parent);
-                $parent->getChildren()->add($activity);
-                $activity->setChildIndex(count($parent->getChildren()));
+                if ($this->activities->hasKey($parentId)) {
+                    $parent = $this->activities->get($parentId);
+                    $activity->setParent($parent);
+                    $parent->getChildren()->add($activity);
+                    $activity->setChildIndex(count($parent->getChildren()));
+                }
             }
         }
 

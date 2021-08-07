@@ -102,12 +102,19 @@ abstract class AbstractActivityAdapter
 
         foreach ($rows as &$row) {
             $id = $row['id'];
+
             $parentId = $row['parentId'] ?? null;
             if ($parentId) {
-                $parent = &$rows[$parentId];
-                array_push($parent['children'], $id);
-                // print_r($parent); exit();
+                if (!isset($rows[$parentId])) {
+                    // referencing parent outside of this project/activity list?
+                } else {
+                    $parent = &$rows[$parentId];
+                    if ($parent) {
+                        array_push($parent['children'], $id);
+                    }
+                }
             }
+
         }
 
         foreach ($rows as &$row) {
