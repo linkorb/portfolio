@@ -3,7 +3,6 @@
 namespace Portfolio\Model;
 
 use Collection\TypedArray;
-use Symfony\Component\Yaml\Yaml;
 
 class Activity extends BaseModel
 {
@@ -31,6 +30,7 @@ class Activity extends BaseModel
     protected $allocations;
     protected $start;
     protected $end;
+    protected $dueAt;
 
     public function __construct()
     {
@@ -52,6 +52,7 @@ class Activity extends BaseModel
         if ($this->parent) {
             return $this->parent->resolveLevel() + 1;
         }
+
         return 0;
     }
 
@@ -59,40 +60,42 @@ class Activity extends BaseModel
     {
         $prefix = '';
         if ($this->parent) {
-            $prefix = $this->parent->resolveWbsId() . '.';
+            $prefix = $this->parent->resolveWbsId().'.';
         }
-        return $prefix . $this->getChildIndex();
+
+        return $prefix.$this->getChildIndex();
     }
 
     public function resolveEffort()
     {
         $effort = 0;
-        if ($this->getType()=='task') {
-            $effort = (int)$this->effort;
+        if ('task' == $this->getType()) {
+            $effort = (int) $this->effort;
         }
         foreach ($this->getChildren() as $child) {
             $effort += $child->resolveEffort();
         }
+
         return $effort;
     }
 
-
     public function isOpen(): bool
     {
-        return ($this->getStatus()!='CLOSED');
+        return 'CLOSED' != $this->getStatus();
     }
 
     public function resolveCompletedEffort()
     {
         $completedEffort = 0;
-        if ($this->getType()=='task') {
-            if ($this->getStatus()=='CLOSED') {
-                $completedEffort = (int)$this->effort;
+        if ('task' == $this->getType()) {
+            if ('CLOSED' == $this->getStatus()) {
+                $completedEffort = (int) $this->effort;
             }
         }
         foreach ($this->getChildren() as $child) {
             $completedEffort += $child->resolveCompletedEffort();
         }
+
         return $completedEffort;
     }
 
@@ -101,38 +104,40 @@ class Activity extends BaseModel
         $completed = $this->resolveCompletedEffort();
         $total = $this->getEffort();
         $perc = 100;
-        if ($total>0) {
-            $perc = round(100/$total*$completed);
+        if ($total > 0) {
+            $perc = round(100 / $total * $completed);
         }
+
         return $perc;
     }
 
     public function resolveCompletedChildren()
     {
         $completed = 0;
-        if ($this->getType()=='task') {
-            if ($this->getStatus()=='CLOSED') {
-                $completed++;
+        if ('task' == $this->getType()) {
+            if ('CLOSED' == $this->getStatus()) {
+                ++$completed;
             }
         }
 
         foreach ($this->getChildren() as $child) {
             $completed += $child->resolveCompletedChildren();
         }
+
         return $completed;
     }
 
     public function resolveTotalChildren()
     {
         $total = 0;
-        if ($this->getType()=='task') {
-            $total++;
+        if ('task' == $this->getType()) {
+            ++$total;
         }
-
 
         foreach ($this->getChildren() as $child) {
             $total += $child->resolveTotalChildren();
         }
+
         return $total;
     }
 
@@ -141,20 +146,20 @@ class Activity extends BaseModel
         $completed = $this->resolveCompletedChildren();
         $total = $this->resolveTotalChildren();
         $perc = 100;
-        if ($total>0) {
-            $perc = round(100/$total*$completed);
+        if ($total > 0) {
+            $perc = round(100 / $total * $completed);
         }
+
         return $perc;
     }
-
 
     public function resolveUnestimatedChildren()
     {
         $unestimated = 0;
-        if ($this->getType()=='task') {
-            if ($this->getEffort()==0) {
-                if ($this->getStatus()!='CLOSED') {
-                    $unestimated++;
+        if ('task' == $this->getType()) {
+            if (0 == $this->getEffort()) {
+                if ('CLOSED' != $this->getStatus()) {
+                    ++$unestimated;
                 }
             }
         }
@@ -162,6 +167,7 @@ class Activity extends BaseModel
         foreach ($this->getChildren() as $child) {
             $unestimated += $child->resolveUnestimatedChildren();
         }
+
         return $unestimated;
     }
 
@@ -184,6 +190,7 @@ class Activity extends BaseModel
         if (isset($config['predecessorIds'])) {
             $obj->predecessorIds = $config['predecessorIds'];
         }
+
         return $obj;
     }
 
@@ -199,13 +206,14 @@ class Activity extends BaseModel
         $data['resourceIds'] = $this->resourceIds;
         $data['predecessorIds'] = $this->predecessorIds;
         $data['effort'] = $this->effort;
-        return $data;
+        $data['effort'] = $this->effort;
 
+        return $data;
     }
 
     public function getPrimaryResource()
     {
-        if (count($this->resources)==0) {
+        if (0 == count($this->resources)) {
             return null;
         }
         foreach ($this->resources as $resource) {
@@ -213,9 +221,8 @@ class Activity extends BaseModel
         }
     }
 
-
     public function getEffortDuration()
     {
-        return new \DateInterval('PT' . $this->getEffort() . 'H');
+        return new \DateInterval('PT'.$this->getEffort().'H');
     }
 }
