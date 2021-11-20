@@ -180,6 +180,7 @@ class Activity extends BaseModel
         $obj->description = $config['description'] ?? null;
         $obj->effort = $config['effort'] ?? null;
         $obj->level = $config['level'] ?? null;
+        $obj->dueAt = $config['dueAt'] ?? null;
         $obj->status = $config['status'] ?? null;
         $obj->state = $config['state'] ?? null;
         $obj->priority = $config['priority'] ?? null;
@@ -206,7 +207,7 @@ class Activity extends BaseModel
         $data['resourceIds'] = $this->resourceIds;
         $data['predecessorIds'] = $this->predecessorIds;
         $data['effort'] = $this->effort;
-        $data['effort'] = $this->effort;
+        $data['dueAt'] = $this->dueAt;
 
         return $data;
     }
