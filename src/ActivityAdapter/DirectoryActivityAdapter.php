@@ -29,7 +29,7 @@ class DirectoryActivityAdapter extends AbstractActivityAdapter
             $row = Yaml::parse($yaml);
             $rows[$row['id']] = $row;
         }
-        $rows = $this->postProcessRows($rows);
+        $rows = $this->postProcessRows($rows ?? []);
 
         return $this->rowsToActivities($rows);
     }
